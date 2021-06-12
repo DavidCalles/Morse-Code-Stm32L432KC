@@ -30,8 +30,8 @@
 #define SPACE 2100			// Time between words
 #define WAIT 5000			// Time between conversions
 
-#define GPIO GPIOB			// Output GPIO
-#define PIN GPIO_PIN_7		// Output pin (Pin D5 on board) (HAL definitions)
+#define GPIO GPIOA			// Output GPIO
+#define PIN GPIO_PIN_12		// Output pin (Pin D2 on board) (HAL definitions)
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct{
