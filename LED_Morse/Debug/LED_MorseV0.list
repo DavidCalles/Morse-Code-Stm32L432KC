@@ -974,7 +974,8 @@ int main(void){
  80008c2:	f8d7 11ac 	ldr.w	r1, [r7, #428]	; 0x1ac
  80008c6:	4817      	ldr	r0, [pc, #92]	; (8000924 <main+0x140>)
  80008c8:	f002 fe26 	bl	8003518 <iprintf>
-	String2Morse(myname, 13, alphabet, lcd); // Actual morse output
+	// Actual morse output
+	String2Morse(myname, (sizeof(myname)/sizeof(myname[0])), alphabet, lcd);
  80008cc:	f107 061c 	add.w	r6, r7, #28
  80008d0:	f107 0e34 	add.w	lr, r7, #52	; 0x34
  80008d4:	f507 7cce 	add.w	ip, r7, #412	; 0x19c
@@ -986,7 +987,7 @@ int main(void){
  80008e2:	602b      	str	r3, [r5, #0]
  80008e4:	6833      	ldr	r3, [r6, #0]
  80008e6:	4672      	mov	r2, lr
- 80008e8:	210d      	movs	r1, #13
+ 80008e8:	210e      	movs	r1, #14
  80008ea:	4660      	mov	r0, ip
  80008ec:	f000 f81e 	bl	800092c <String2Morse>
 	if (SERIAL_ENABLE)

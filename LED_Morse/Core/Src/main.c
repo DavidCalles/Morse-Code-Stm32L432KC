@@ -186,7 +186,8 @@ int main(void){
 
 	if (SERIAL_ENABLE)
 	printf("Initiate conversion %d \r\n", x);
-	String2Morse(myname, 13, alphabet, lcd); // Actual morse output
+	// Actual morse output
+	String2Morse(myname, (sizeof(myname)/sizeof(myname[0])), alphabet, lcd);
 	if (SERIAL_ENABLE)
 	printf("End conversion %d \r\n", x++);
 	HAL_Delay(WAIT);
