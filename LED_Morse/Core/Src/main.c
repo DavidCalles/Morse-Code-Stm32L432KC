@@ -30,8 +30,33 @@
 #define SPACE 2100			// Time between words
 #define WAIT 5000			// Time between conversions
 
-#define GPIO GPIOA			// Output GPIO
-#define PIN GPIO_PIN_12		// Output pin (Pin D2 on board) (HAL definitions)
+/*LED pin*/
+#define LED_GPIO GPIOA			// Output GPIO
+#define LED_PIN GPIO_PIN_12		// Output pin (Pin D2 on board) (HAL definitions)
+
+/*LCD screen pins*/
+#define D0_GPIO_Port GPIOB
+#define D1_GPIO_Port GPIOB
+#define D2_GPIO_Port GPIOB
+#define D3_GPIO_Port GPIOB
+#define D4_GPIO_Port GPIOA
+#define D5_GPIO_Port GPIOA
+#define D6_GPIO_Port GPIOB
+#define D7_GPIO_Port GPIOB
+
+#define D0_Pin GPIO_PIN_0
+#define D1_Pin GPIO_PIN_7
+#define D2_Pin GPIO_PIN_6
+#define D3_Pin GPIO_PIN_1
+#define D4_Pin GPIO_PIN_8
+#define D5_Pin GPIO_PIN_11
+#define D6_Pin GPIO_PIN_5
+#define D7_Pin GPIO_PIN_4
+
+#define RS_GPIO_Port 	GPIOA
+#define RS_Pin 			GPIO_PIN_9
+#define EN_GPIO_Port	GPIOA
+#define EN_Pin			GPIO_PIN_10
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct{
@@ -106,19 +131,8 @@ int main(void)
   SystemClock_Config();
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+  MX_GPIO_Init(); // Manually modified to include LED_PIN
   MX_USART2_UART_Init();
-  GPIO_InitTypeDef GPIO_InitStruct2 = {0};
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIO, PIN, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : LD3_Pin */
-  GPIO_InitStruct2.Pin = PIN;
-  GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct2.Pull = GPIO_NOPULL;
-  GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIO, &GPIO_InitStruct2);
 
   /*General purpose variables*/
   unsigned int x = 0;
@@ -185,11 +199,11 @@ uint8_t String2Morse(char *name, uint8_t n, MORSE_CHAR *alphabet){
 
 			for(uint8_t j = 0; j < alphabet[index].length; j++){
 				//Turn LED ON,
-				HAL_GPIO_WritePin(GPIO, PIN, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(LED_GPIO, LED_PIN, GPIO_PIN_SET);
 				//Keep led on for a specific time
 				HAL_Delay(alphabet[index].morse[j]);
 				//Turn LED OFF,
-				HAL_GPIO_WritePin(GPIO, PIN, GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(LED_GPIO, LED_PIN, GPIO_PIN_RESET);
 				HAL_Delay(PAUSE);
 			}// end for j
 		}//end if (state == SHOW)
@@ -303,28 +317,63 @@ static void MX_USART2_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|LD3_Pin|GPIO_PIN_4
+						  |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LD3_Pin */
-  GPIO_InitStruct.Pin = LD3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD3_GPIO_Port, &GPIO_InitStruct);
+	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
+						  |GPIO_PIN_12, GPIO_PIN_RESET);
 
+	/*Configure LED Output level*/
+	HAL_GPIO_WritePin(LED_GPIO, LED_PIN, GPIO_PIN_RESET);
+
+	/*Configure GPIO pin : VCP_TX_Pin */
+	GPIO_InitStruct.Pin = VCP_TX_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+	HAL_GPIO_Init(VCP_TX_GPIO_Port, &GPIO_InitStruct);
+
+	/*Configure GPIO pins : PB0 PB1 LD3_Pin PB4
+						   PB5 PB6 PB7 */
+	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|LD3_Pin|GPIO_PIN_4
+						  |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+	if(LED_GPIO == GPIOB) // Add Led pin if part of GPIOB
+	  GPIO_InitStruct.Pin |= LED_PIN;
+
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	/*Configure GPIO pins : PA8 PA9 PA10 PA11
+						   PA12 */
+	GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
+						  |GPIO_PIN_12;
+	if(LED_GPIO == GPIOA)// Add Led pin if part of GPIOA
+	  GPIO_InitStruct.Pin |= LED_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : VCP_RX_Pin */
+	GPIO_InitStruct.Pin = VCP_RX_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF3_USART2;
+	HAL_GPIO_Init(VCP_RX_GPIO_Port, &GPIO_InitStruct);
 }
-
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
