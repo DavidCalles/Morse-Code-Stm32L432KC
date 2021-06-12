@@ -1,6 +1,6 @@
-main.c:91:5:main	352	static
-main.c:160:9:String2Morse	32	static
-main.c:219:6:SystemClock_Config	184	static
-main.c:283:13:MX_USART2_UART_Init	8	static
-main.c:318:13:MX_GPIO_Init	40	static
-main.c:388:6:Error_Handler	4	static,ignoring_inline_asm
+main.c:93:5:main	480	static
+main.c:184:9:String2Morse	40	static
+main.c:260:6:SystemClock_Config	184	static
+main.c:324:13:MX_USART2_UART_Init	8	static
+main.c:347:13:MX_GPIO_Init	40	static
+main.c:411:6:Error_Handler	4	static,ignoring_inline_asm

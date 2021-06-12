@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "lcd.h"
 #include <stdio.h>
 
 /* Private define ------------------------------------------------------------*/
@@ -26,44 +27,45 @@
 #define DOT 300				// Duration in miliseconds of a DOT
 #define LINE 900			// Duration in miliseconds of a LINE
 #define ALPHABET_SIZE 26 	// Number of letters in alphabet
-#define PAUSE 300			// Time between letters
+#define PAUSE 300			// Time between flashes
+#define PAUSE_L 600			// Time between letters
 #define SPACE 2100			// Time between words
 #define WAIT 5000			// Time between conversions
 
 /*LED pin*/
 #define LED_GPIO GPIOA			// Output GPIO
-#define LED_PIN GPIO_PIN_12		// Output pin (Pin D2 on board) (HAL definitions)
+#define LED_PIN GPIO_PIN_12		// Output pin (Pin D2 on board)
 
 /*LCD screen pins*/
-#define D0_GPIO_Port GPIOB
-#define D1_GPIO_Port GPIOB
-#define D2_GPIO_Port GPIOB
-#define D3_GPIO_Port GPIOB
-#define D4_GPIO_Port GPIOA
-#define D5_GPIO_Port GPIOA
-#define D6_GPIO_Port GPIOB
-#define D7_GPIO_Port GPIOB
+#define D0_GPIO_Port GPIOB		// Data 0 GPIO port
+#define D1_GPIO_Port GPIOB		// Data 1 GPIO port
+#define D2_GPIO_Port GPIOB		// Data 2 GPIO port
+#define D3_GPIO_Port GPIOB		// Data 3 GPIO port
+#define D4_GPIO_Port GPIOA		// Data 4 GPIO port
+#define D5_GPIO_Port GPIOA		// Data 5 GPIO port
+#define D6_GPIO_Port GPIOB		// Data 6 GPIO port
+#define D7_GPIO_Port GPIOB		// Data 7 GPIO port
 
-#define D0_Pin GPIO_PIN_0
-#define D1_Pin GPIO_PIN_7
-#define D2_Pin GPIO_PIN_6
-#define D3_Pin GPIO_PIN_1
-#define D4_Pin GPIO_PIN_8
-#define D5_Pin GPIO_PIN_11
-#define D6_Pin GPIO_PIN_5
-#define D7_Pin GPIO_PIN_4
+#define D0_Pin GPIO_PIN_0		// Data 0 pin (D3 on board)
+#define D1_Pin GPIO_PIN_7		// Data 0 pin (D4 on board)
+#define D2_Pin GPIO_PIN_6		// Data 0 pin (D5 on board)
+#define D3_Pin GPIO_PIN_1		// Data 0 pin (D6 on board)
+#define D4_Pin GPIO_PIN_8		// Data 0 pin (D9 on board)
+#define D5_Pin GPIO_PIN_11		// Data 0 pin (D10 on board)
+#define D6_Pin GPIO_PIN_5		// Data 0 pin (D11 on board)
+#define D7_Pin GPIO_PIN_4		// Data 0 pin (D12 on board)
 
-#define RS_GPIO_Port 	GPIOA
-#define RS_Pin 			GPIO_PIN_9
-#define EN_GPIO_Port	GPIOA
-#define EN_Pin			GPIO_PIN_10
+#define RS_GPIO_Port GPIOA		 // Register select GPIO port
+#define RS_Pin 		 GPIO_PIN_9  // Register select pin (D1)
+#define EN_GPIO_Port GPIOA		 // Enable GPIO port
+#define EN_Pin		 GPIO_PIN_10 // Register select pin (D0)
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct{
 	char capitalC, lowerC;
 	uint8_t length;
 	uint16_t morse[MAX_CHAR_LENGTH];
-}MORSE_CHAR;
+}MORSE_CHAR; // Struct for each element of morse code
 
 typedef enum {
 	NOTSHOW = 0,
@@ -80,7 +82,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 
 /*User Defined*/
-uint8_t String2Morse(char *, uint8_t, MORSE_CHAR *);
+uint8_t String2Morse(char *, uint8_t, MORSE_CHAR *, Lcd_HandleTypeDef);
 
 /* Private user code ---------------------------------------------------------*/
 
@@ -88,11 +90,22 @@ uint8_t String2Morse(char *, uint8_t, MORSE_CHAR *);
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
-  /* USER CODE BEGIN 1 */
+int main(void){
+
+	/*General purpose variables*/
+	unsigned int x = 0; // Conversions counter
+	char myname[] = "David Calles\n"; // Input string
+
+	// GPIO Ports for LCD
+	Lcd_PortType ports[] = {
+			D0_GPIO_Port, D1_GPIO_Port, D2_GPIO_Port, D3_GPIO_Port,
+			D4_GPIO_Port, D5_GPIO_Port, D6_GPIO_Port, D7_GPIO_Port
+	  };
+	// GPIO Pins for LCD
+	Lcd_PinType pins[] = {D0_Pin, D1_Pin, D2_Pin, D3_Pin,
+						  D4_Pin, D5_Pin, D6_Pin, D7_Pin};
 	/*Morse alphabet*/
- MORSE_CHAR alphabet[ALPHABET_SIZE] = {
+	MORSE_CHAR alphabet[ALPHABET_SIZE] = {
 			{'A', 'a', 2, {DOT,		LINE,	0,		0}},
 			{'B', 'b', 4, {LINE,	DOT,	DOT,	DOT}},
 			{'C', 'c', 4, {LINE,	DOT,	LINE,	DOT}},
@@ -120,7 +133,6 @@ int main(void)
 			{'Y', 'y', 4, {LINE,	DOT,	LINE,	LINE}},
 			{'Z', 'z', 4, {LINE,	LINE,	DOT,	DOT}}
 	};
-  /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -134,34 +146,48 @@ int main(void)
   MX_GPIO_Init(); // Manually modified to include LED_PIN
   MX_USART2_UART_Init();
 
-  /*General purpose variables*/
-  unsigned int x = 0;
-  char myname[] = "A A B B C C\n"; // Input string
+  // Create handler for the LCD
+  Lcd_HandleTypeDef lcd;
+  lcd = Lcd_create(ports, pins,
+		  	  	  RS_GPIO_Port, RS_Pin,
+		  	  	  EN_GPIO_Port, EN_Pin,
+				  LCD_8_BIT_MODE);
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+
+  //Lcd_clear(&lcd);
+
+  /* Infinite loop---------------------------------------------------------*/
   while (1){
+	// Show Initial message
+	Lcd_clear(&lcd);
+	Lcd_cursor(&lcd, 0,1);
+	Lcd_string(&lcd, "String 2 Morse");
+	Lcd_cursor(&lcd, 1,0);
+	Lcd_string(&lcd, "by David Calles!");
+	HAL_Delay(5000);
 
 	printf("Initiate conversion %d \r\n", x);
-	String2Morse(myname, 13, alphabet);
+	String2Morse(myname, 13, alphabet, lcd); // Actual morse output
 	printf("End conversion %d \r\n", x++);
-	HAL_Delay(WAIT);
-    /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
-}
+
+
+
+	HAL_Delay(WAIT);
+  } // End while(1)
+} // End Main
 
 /**
   * @brief String2Morse
-  * @retval None
+  * @retval Characters processed
   */
-uint8_t String2Morse(char *name, uint8_t n, MORSE_CHAR *alphabet){
+uint8_t String2Morse(char *name, uint8_t n, MORSE_CHAR *alphabet, Lcd_HandleTypeDef lcd){
 
 	//Index calculation and cases evaluation
 	uint8_t i = 0;
 	uint8_t index = 0;
+	char dispC[] = "  ";
+	char dispM[] = "     ";
 	CHAR_STATE state = NOTSHOW;
 	// Iterate through every character in string
 	for(i=0; i<n; i++){
@@ -194,9 +220,7 @@ uint8_t String2Morse(char *name, uint8_t n, MORSE_CHAR *alphabet){
 
 		// Output of the morse code of the character
 		if (state == SHOW){
-
-			printf("%c\n\r", alphabet[index].capitalC); //Print detected char
-
+			dispM[0] = ' ', dispM[1] = ' ', dispM[2] = ' ', dispM[3] = ' ';
 			for(uint8_t j = 0; j < alphabet[index].length; j++){
 				//Turn LED ON,
 				HAL_GPIO_WritePin(LED_GPIO, LED_PIN, GPIO_PIN_SET);
@@ -204,8 +228,25 @@ uint8_t String2Morse(char *name, uint8_t n, MORSE_CHAR *alphabet){
 				HAL_Delay(alphabet[index].morse[j]);
 				//Turn LED OFF,
 				HAL_GPIO_WritePin(LED_GPIO, LED_PIN, GPIO_PIN_RESET);
+				//Create morse string for lcd
+				if(alphabet[index].morse[j]==DOT)
+					dispM[j]='.';
+				if(alphabet[index].morse[j]==LINE)
+					dispM[j]='_';
 				HAL_Delay(PAUSE);
 			}// end for j
+
+			printf("%c\n\r", alphabet[index].capitalC); //Print detected char
+			// Show letter on LCD
+			dispC[0]= alphabet[index].capitalC;
+			Lcd_clear(&lcd);
+			Lcd_cursor(&lcd, 0, 7);
+			Lcd_string(&lcd, dispC);
+
+			// Show morse on LCD
+			Lcd_cursor(&lcd, 1, 7);
+			Lcd_string(&lcd, dispM);
+			HAL_Delay(PAUSE_L);
 		}//end if (state == SHOW)
 
 	}//end for i
@@ -282,14 +323,6 @@ void SystemClock_Config(void)
   */
 static void MX_USART2_UART_Init(void)
 {
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
   huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
@@ -304,10 +337,6 @@ static void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
 }
 
 /**
