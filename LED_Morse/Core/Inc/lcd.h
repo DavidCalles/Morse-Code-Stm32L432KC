@@ -3,6 +3,9 @@
  *
  *  Created on: 10/06/2018
  *      Author: Olivier Van den Eede
+ *		https://github.com/4ilo/HD44780-Stm32HAL
+ *		Usage under MIT license
+ *		Adapted to STM32L432KC by David Calles
  */
 
 #ifndef LCD_H_
