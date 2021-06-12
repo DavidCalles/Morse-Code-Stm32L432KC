@@ -61,8 +61,8 @@ all: main-build
 main-build: LED_MorseV0.elf secondary-outputs
 
 # Tool invocations
-LED_MorseV0.elf: $(OBJS) $(USER_OBJS) C:\Users\yodav\Documents\Conestoga_College\FIRST_TERM\Embedded_Programming\Assignments\Assignment1\LED_MorseV0\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "LED_MorseV0.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\yodav\Documents\Conestoga_College\FIRST_TERM\Embedded_Programming\Assignments\Assignment1\LED_MorseV0\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LED_MorseV0.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+LED_MorseV0.elf: $(OBJS) $(USER_OBJS) C:\Users\yodav\Documents\Conestoga_College\FIRST_TERM\Embedded_Programming\Assignments\Assignment1\Morse-Code-Stm32L432KC\LED_Morse\STM32L432KCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "LED_MorseV0.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\yodav\Documents\Conestoga_College\FIRST_TERM\Embedded_Programming\Assignments\Assignment1\Morse-Code-Stm32L432KC\LED_Morse\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LED_MorseV0.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -28,6 +28,10 @@
 #define ALPHABET_SIZE 26 	// Number of letters in alphabet
 #define PAUSE 300			// Time between letters
 #define SPACE 2100			// Time between words
+#define WAIT 5000			// Time between conversions
+
+#define GPIO GPIOB			// Output GPIO
+#define PIN GPIO_PIN_7		// Output pin (Pin D5 on board) (HAL definitions)
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct{
@@ -63,7 +67,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	/*Morse alphabet*/
-	MORSE_CHAR alphabet[ALPHABET_SIZE] = {
+ MORSE_CHAR alphabet[ALPHABET_SIZE] = {
 			{'A', 'a', 2, {DOT,		LINE,	0,		0}},
 			{'B', 'b', 4, {LINE,	DOT,	DOT,	DOT}},
 			{'C', 'c', 4, {LINE,	DOT,	LINE,	DOT}},
@@ -98,10 +102,6 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
 
@@ -111,19 +111,18 @@ int main(void)
   GPIO_InitTypeDef GPIO_InitStruct2 = {0};
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIO, PIN, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LD3_Pin */
-  GPIO_InitStruct2.Pin = GPIO_PIN_6;
+  GPIO_InitStruct2.Pin = PIN;
   GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct2.Pull = GPIO_NOPULL;
   GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct2);
+  HAL_GPIO_Init(GPIO, &GPIO_InitStruct2);
 
-  /* USER CODE BEGIN 2 */
+  /*General purpose variables*/
   unsigned int x = 0;
-  char myname[] = "David Calles\n";
-  /* USER CODE END 2 */
+  char myname[] = "A A B B C C\n"; // Input string
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -132,6 +131,7 @@ int main(void)
 	printf("Initiate conversion %d \r\n", x);
 	String2Morse(myname, 13, alphabet);
 	printf("End conversion %d \r\n", x++);
+	HAL_Delay(WAIT);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -181,12 +181,15 @@ uint8_t String2Morse(char *name, uint8_t n, MORSE_CHAR *alphabet){
 		// Output of the morse code of the character
 		if (state == SHOW){
 
-			printf("%c\n\r", alphabet[index].capitalC); //Print detected char (debug)
+			printf("%c\n\r", alphabet[index].capitalC); //Print detected char
 
 			for(uint8_t j = 0; j < alphabet[index].length; j++){
-				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);//Turn LED ON,
+				//Turn LED ON,
+				HAL_GPIO_WritePin(GPIO, PIN, GPIO_PIN_SET);
+				//Keep led on for a specific time
 				HAL_Delay(alphabet[index].morse[j]);
-				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);//Turn LED OFF,
+				//Turn LED OFF,
+				HAL_GPIO_WritePin(GPIO, PIN, GPIO_PIN_RESET);
 				HAL_Delay(PAUSE);
 			}// end for j
 		}//end if (state == SHOW)
